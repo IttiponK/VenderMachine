@@ -52,3 +52,5 @@ networks:
       name:
         webproxy
 ```
+
+ps. before run docker-compose must be crate webproxy network and map this network to all service what you wan't to deploy and specific dns to target service
