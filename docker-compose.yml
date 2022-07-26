@@ -1,0 +1,133 @@
+version: '3'
+
+services:
+
+  rabbitmq:
+      image: "rabbitmq:management"
+      container_name: rabbitmq
+      restart: always
+
+  orderservice:
+    container_name: orderservice
+    build:
+      context: ./orderservice/
+      dockerfile: Dockerfile
+    depends_on:
+      - ordersdb
+    ports:
+      - '8000:8000'
+    environment:
+     - TZ=Asia/Bangkok
+
+  ordersdb:
+    container_name: ordersdb
+    image: mariadb:latest
+    restart: always
+    volumes:
+      - ./orderservice/infrastructure/mysql/initdb/:/docker-entrypoint-initdb.d
+      - ./orderservice/infrastructure/mysql/data/:/var/lib/mysql/
+    environment:
+      - MYSQL_ROOT_PASSWORD=ittimoo
+      - MYSQL_DATABASE=orderservice
+      - MYSQL_USER=ittimoo
+      - MYSQL_PASSWORD=ittimoo
+      - TZ=Asia/Bangkok
+      
+  pma:
+    container_name: orders_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - ordersdb
+    environment:
+      PMA_HOST: ordersdb
+      TZ: Asia/Bangkok
+    
+    ports:
+      - "8080:80"
+  
+  stockservice:
+    container_name: stockservice
+    build:
+      context: ./stockservice/
+      dockerfile: rest.Dockerfile 
+    depends_on:
+      - stockdb 
+    ports:
+      - '5000:8001'
+    environment:
+      - TZ=Asia/Bangkok 
+
+  stockservicemq:
+    container_name: stockservicemq 
+    build:
+      context: ./stockservice/
+      dockerfile: rpc.Dockerfile
+    restart: always
+    depends_on:
+      - stockdb 
+      - rabbitmq
+
+  stockdb:
+    container_name: stockdb
+    image: mariadb:latest
+    restart: always
+    volumes:
+      - ./stockservice/infrastructure/mysql/initdb/:/docker-entrypoint-initdb.d
+      - ./stockservice/infrastructure/mysql/data/:/var/lib/mysql/
+    environment:
+      - MYSQL_ROOT_PASSWORD=ittimoo
+      - MYSQL_DATABASE=stockservice
+      - MYSQL_USER=ittimoo
+      - MYSQL_PASSWORD=ittimoo
+      - TZ=Asia/Bangkok
+    
+  pma2:
+    container_name: stock_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - ordersdb
+    environment:
+      PMA_HOST: stockdb
+      TZ: Asia/Bangkok
+    ports:
+      - "8070:80"
+
+  vendingdb:
+    container_name: vendingdb
+    image: mariadb:latest
+    restart: always
+    volumes:
+      - ./vendingservice/infrastructure/mysql/initdb/:/docker-entrypoint-initdb.d
+      - ./vendingservice/infrastructure/mysql/data/:/var/lib/mysql/
+    environment:
+      - MYSQL_ROOT_PASSWORD=ittimoo
+      - MYSQL_DATABASE=vendingservice
+      - MYSQL_USER=ittimoo
+      - MYSQL_PASSWORD=ittimoo
+      - TZ=Asia/Bangkok
+
+  pma3:
+    container_name: vending_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - ordersdb
+    environment:
+      PMA_HOST: vendingdb
+      TZ: Asia/Bangkok
+    ports:
+      - "8060:80"
+  
+  vendingservicemq:
+    container_name: vendingservicemq 
+    build:
+      context: ./vendingservice/
+      dockerfile: rpc.Dockerfile
+    restart: always
+    depends_on:
+      - vendingdb 
+      - rabbitmq
+
+      
