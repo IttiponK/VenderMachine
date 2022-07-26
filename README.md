@@ -12,7 +12,7 @@ step3: Let's go!!! You can see order service api in localhost:8000 and stock ser
 # How to deploy
 
 you can setup nginx in docker or docker-compose and mount it to docker.sock in example docker-compose file let see below 
-
+```
 version: '2'
 services:
   nginx-proxy:
@@ -51,3 +51,4 @@ networks:
     external:
       name:
         webproxy
+```
